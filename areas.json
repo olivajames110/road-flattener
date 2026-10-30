@@ -1,0 +1,15 @@
+{
+  "updated": "2026-10-30",
+  "modVersion": "0.1.0",
+  "areas": [
+    {
+      "id": "farmingdale-ny",
+      "name": "Farmingdale, NY (Republic Airport)",
+      "lat": 40.74,
+      "lon": -73.415,
+      "radiusKm": 2.5,
+      "added": "2026-10-30",
+      "version": "0.1.0"
+    }
+  ]
+}
