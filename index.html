@@ -335,7 +335,9 @@ function renderList() {
 /* Point check -------------------------------------------------------------- */
 
 function select(lat, lon, label) {
-  point = { lat, lon, label: label || "Selected point" };
+  point = { lat, lon, label: label || "Finding place name…" };
+  // Map clicks and "my location" have no name yet, so look one up
+  labelPending = label ? null : lookupLabel(point);
   resetRequest();
   if (pointMarker) pointMarker.remove();
   pointMarker = L.circleMarker([lat, lon], {
@@ -424,9 +426,10 @@ async function requestArea() {
     els.requestHint.textContent = "Requests open soon. Check back shortly.";
     return;
   }
-  const params = formParams();
   els.requestBtn.disabled = true;
   els.requestBtn.textContent = "Sending…";
+  if (labelPending) await labelPending;
+  const params = formParams();
   try {
     // Google Forms doesn't allow reading the response cross-origin, so a completed request counts as sent
     await fetch(CONFIG.formUrl.replace(/\/viewform.*$/, "/formResponse"), {
@@ -447,19 +450,38 @@ async function requestArea() {
 
 /* Search & location -------------------------------------------------------- */
 
-let lastSearch = 0;
+let lastNominatim = 0;
+let labelPending = null;
+async function nominatim(path) {
+  // Nominatim asks for no more than one request per second
+  const wait = 1100 - (Date.now() - lastNominatim);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastNominatim = Date.now();
+  const res = await fetch("https://nominatim.openstreetmap.org/" + path, {
+    headers: { "Accept-Language": navigator.language || "en" },
+  });
+  return res.json();
+}
+
+async function lookupLabel(p) {
+  let label = "Unnamed area";
+  try {
+    const hit = await nominatim("reverse?format=jsonv2&zoom=10&lat=" + p.lat + "&lon=" + p.lon);
+    const a = hit.address || {};
+    const name = a.city || a.town || a.village || a.hamlet || a.municipality || a.county;
+    const parts = [name, a.state, a.country].filter(Boolean);
+    if (parts.length) label = parts.join(", ");
+  } catch (e) { /* keep the fallback */ }
+  p.label = label;
+  if (point === p) els.placeName.textContent = label;
+}
+
 async function search(q) {
   q = q.trim();
   if (!q) return;
-  // Nominatim asks for no more than one request per second
-  const wait = 1100 - (Date.now() - lastSearch);
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-  lastSearch = Date.now();
   els.hint.textContent = "Searching…";
   try {
-    const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(q);
-    const res = await fetch(url, { headers: { "Accept-Language": navigator.language || "en" } });
-    const hits = await res.json();
+    const hits = await nominatim("search?format=jsonv2&limit=1&q=" + encodeURIComponent(q));
     if (!hits.length) { els.hint.textContent = "No place found for \"" + q + "\". Try a nearby city."; return; }
     const h = hits[0];
     els.hint.textContent = "Or click anywhere on the map.";
@@ -475,13 +497,13 @@ $("locate").addEventListener("click", () => {
   if (!navigator.geolocation) { els.hint.textContent = "Your browser can't share its location."; return; }
   els.hint.textContent = "Finding your location…";
   navigator.geolocation.getCurrentPosition(
-    (p) => { els.hint.textContent = "Or click anywhere on the map."; select(p.coords.latitude, p.coords.longitude, "Your location"); },
+    (p) => { els.hint.textContent = "Or click anywhere on the map."; select(p.coords.latitude, p.coords.longitude); },
     () => { els.hint.textContent = "Couldn't get your location. Search or click the map instead."; },
     { enableHighAccuracy: false, timeout: 10000 },
   );
 });
 
-map.on("click", (e) => select(e.latlng.lat, wrapLon(e.latlng.lng), "Selected point"));
+map.on("click", (e) => select(e.latlng.lat, wrapLon(e.latlng.lng)));
 function wrapLon(lon) { return ((lon + 180) % 360 + 360) % 360 - 180; }
 
 els.radius.addEventListener("input", updatePreview);
