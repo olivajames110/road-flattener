@@ -188,11 +188,11 @@
       <div class="coords" id="coords"></div>
 
       <div class="request" id="request">
-        <div class="label-row"><span>Radius to cover</span><span id="radiusLabel">15 km</span></div>
+        <div class="label-row"><span>Radius to cover</span><span id="radiusLabel">15 km · 9.3 mi</span></div>
         <input type="range" id="radius" min="5" max="50" step="5" value="15" aria-label="Radius in kilometres">
         <textarea class="input" id="notes" placeholder="Anything we should know? (optional)"></textarea>
         <button class="btn btn-primary btn-block" id="requestBtn" type="button" style="margin-top:12px">Request this area</button>
-        <div class="hint" id="requestHint">Opens a short form with these details filled in.</div>
+        <div class="hint" id="requestHint">Sends this point and radius as a coverage request.</div>
       </div>
     </div>
 
@@ -225,10 +225,16 @@
 const CONFIG = {
   // flightsim.to page for the mod
   downloadUrl: "",
-  // Google Form "pre-filled link" base, e.g. https://docs.google.com/forms/d/e/XXXX/viewform
-  formUrl: "",
+  // Google Form base URL, e.g. https://docs.google.com/forms/d/e/XXXX/viewform (requests post to .../formResponse)
+  formUrl: "https://docs.google.com/forms/d/e/1FAIpQLScVRxjvCpeIfGorNrgSnyEDUzc5pUqHID3kDfYGQ5CKOJtYPw/viewform",
   // The entry.NNNN ids for each question, taken from the pre-filled link
-  formFields: { place: "", lat: "", lon: "", radius: "", notes: "" },
+  formFields: {
+    place: "entry.544154387",
+    lat: "entry.701741949",
+    lon: "entry.1418313407",
+    radius: "entry.890763123",
+    notes: "entry.1442149465",
+  },
 };
 
 /* ------------------------------------------------------------------------- */
@@ -263,6 +269,8 @@ function km(a, b) {
 }
 
 function fmtKm(d) { return d < 10 ? d.toFixed(1) + " km" : Math.round(d) + " km"; }
+function fmtMi(d) { const mi = d * 0.621371; return mi < 10 ? mi.toFixed(1) + " mi" : Math.round(mi) + " mi"; }
+function fmtDist(d) { return fmtKm(d) + " · " + fmtMi(d); }
 function fmtDate(iso) {
   const d = new Date(iso + "T00:00:00");
   return isNaN(d) ? iso : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
@@ -316,7 +324,7 @@ function renderList() {
     b.type = "button";
     const dot = document.createElement("span"); dot.className = "dot";
     const name = document.createElement("span"); name.className = "name"; name.textContent = a.name;
-    const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = fmtKm(a.radiusKm) + " radius";
+    const meta = document.createElement("span"); meta.className = "meta"; meta.textContent = fmtDist(a.radiusKm);
     b.append(dot, name, meta);
     b.addEventListener("click", () => select(a.lat, a.lon, a.name));
     li.appendChild(b);
@@ -328,6 +336,7 @@ function renderList() {
 
 function select(lat, lon, label) {
   point = { lat, lon, label: label || "Selected point" };
+  resetRequest();
   if (pointMarker) pointMarker.remove();
   pointMarker = L.circleMarker([lat, lon], {
     radius: 8, color: "#fff", weight: 3, fillColor: css("--accent") || "#2563eb", fillOpacity: 1,
@@ -360,7 +369,7 @@ function check() {
     els.badge.className = "badge no";
     els.badge.textContent = "Not covered yet";
     els.placeText.textContent = nearest
-      ? "Nearest covered area: " + nearest.name + ", " + fmtKm(nearestKm) + " away."
+      ? "Nearest covered area: " + nearest.name + ", " + fmtDist(nearestKm) + " away."
       : "No areas are covered yet.";
     els.request.style.display = "block";
     updatePreview();
@@ -369,7 +378,7 @@ function check() {
 
 function updatePreview() {
   const r = Number(els.radius.value);
-  els.radiusLabel.textContent = r + " km";
+  els.radiusLabel.textContent = fmtDist(r);
   if (!point) return;
   const accent = css("--accent") || "#2563eb";
   if (!previewCircle) {
@@ -392,21 +401,48 @@ function formReady() {
   return CONFIG.formUrl && f.place && f.lat && f.lon && f.radius;
 }
 
-function requestArea() {
-  if (!point) return;
-  if (!formReady()) {
-    els.requestHint.textContent = "Requests open soon. Check back shortly.";
-    return;
-  }
+function resetRequest() {
+  els.requestBtn.disabled = false;
+  els.requestBtn.textContent = "Request this area";
+  els.requestHint.textContent = "Sends this point and radius as a coverage request.";
+}
+
+function formParams() {
   const f = CONFIG.formFields;
-  const params = new URLSearchParams({ usp: "pp_url" });
+  const params = new URLSearchParams();
   params.set(f.place, point.label);
   params.set(f.lat, point.lat.toFixed(5));
   params.set(f.lon, point.lon.toFixed(5));
   params.set(f.radius, els.radius.value);
   if (f.notes && els.notes.value.trim()) params.set(f.notes, els.notes.value.trim());
-  window.open(CONFIG.formUrl + "?" + params.toString(), "_blank", "noopener");
-  els.requestHint.textContent = "Form opened in a new tab. Press Submit there to send your request.";
+  return params;
+}
+
+async function requestArea() {
+  if (!point) return;
+  if (!formReady()) {
+    els.requestHint.textContent = "Requests open soon. Check back shortly.";
+    return;
+  }
+  const params = formParams();
+  els.requestBtn.disabled = true;
+  els.requestBtn.textContent = "Sending…";
+  try {
+    // Google Forms doesn't allow reading the response cross-origin, so a completed request counts as sent
+    await fetch(CONFIG.formUrl.replace(/\/viewform.*$/, "/formResponse"), {
+      method: "POST", mode: "no-cors", body: params,
+    });
+    els.requestBtn.textContent = "Request sent";
+    els.requestHint.textContent = "Thanks! Your request was received.";
+    els.notes.value = "";
+  } catch (e) {
+    // Fall back to the pre-filled form so the request isn't lost
+    params.set("usp", "pp_url");
+    window.open(CONFIG.formUrl + "?" + params.toString(), "_blank", "noopener");
+    els.requestBtn.disabled = false;
+    els.requestBtn.textContent = "Request this area";
+    els.requestHint.textContent = "Couldn't send directly, so the form opened in a new tab. Press Submit there.";
+  }
 }
 
 /* Search & location -------------------------------------------------------- */
