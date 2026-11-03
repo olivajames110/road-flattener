@@ -1,38 +1,40 @@
-# Road Flattener
+# Smoother Roads
 
-Smooth roads for ground vehicles in Microsoft Flight Simulator 2024.
+Drivable roads for ground vehicles in Microsoft Flight Simulator 2024.
 
-**Check coverage and request your area:** https://olivajames110.github.io/road-flattener/
+**Check coverage and request your area:** https://olivajames110.github.io/smoother-roads/
 
-Road Flattener flattens the terrain and removes broken photogrammetry along real roads, so cars,
-UTVs and other ground vehicles can drive without hitting spikes. Coverage is added area by area
-based on requests.
+Smoother Roads removes broken photogrammetry in a narrow strip along real roads and lays a smooth
+surface that follows the road's height, so cars, UTVs and other ground vehicles can drive without
+hitting spikes. Everything off the road keeps its photogrammetry. Coverage comes as region packs,
+added based on requests.
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `index.html` | The coverage map website (served by GitHub Pages) |
-| `areas.json` | The list of covered areas. The map reads this file live. |
+| `areas.json` | The list of covered regions. The map reads this file live. |
 
-## Adding a covered area
+## Adding a covered region
 
-Add an entry to `areas` in `areas.json` and commit:
+Add an entry to `areas` in `areas.json` (and the fallback copy in `index.html`) and commit:
 
 ```json
 {
-  "id": "unique-id",
-  "name": "Place name, ST",
-  "lat": 40.74,
-  "lon": -73.415,
+  "id": "farmingdale-ny",
+  "name": "Farmingdale, NY",
+  "package": "smoother-roads-farmingdale-ny",
+  "lat": 40.7326,
+  "lon": -73.4454,
   "radiusKm": 15,
-  "added": "2026-10-30",
-  "version": "0.2.0"
+  "added": "2026-11-03",
+  "version": "0.1.0"
 }
 ```
 
-Also update `"updated"` and `"modVersion"` at the top. Only publish an area once the mod version
-that contains it is live on flightsim.to.
+Also update `"updated"` and `"modVersion"` at the top. Only publish a region once the version that
+contains it is live on flightsim.to.
 
 ## Credits
 

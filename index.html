@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Road Flattener Coverage</title>
-<meta name="description" content="Check whether Road Flattener for Microsoft Flight Simulator 2024 covers your area, and request new areas.">
+<title>Smoother Roads Coverage</title>
+<meta name="description" content="Check whether Smoother Roads for Microsoft Flight Simulator 2024 covers your area, and request new areas.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
@@ -161,11 +161,11 @@
         <path d="M18 104 H110" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
       </svg>
       <div>
-        <h1>Road Flattener</h1>
+        <h1>Smoother Roads</h1>
         <p>Coverage for MSFS 2024</p>
       </div>
     </div>
-    <p class="intro">Road Flattener smooths roads for ground vehicles in selected areas. Search for your area to see if it's covered, or request it.</p>
+    <p class="intro">Smoother Roads makes photogrammetry roads drivable for cars and UTVs, one region pack at a time. Search for your area to see if it's covered, or request it for free.</p>
   </header>
 
   <div class="panel-body">
@@ -209,10 +209,10 @@
 <!-- Fallback copy of areas.json, used only if the live file can't be loaded (e.g. opened from disk). -->
 <script type="application/json" id="areasFallback">
 {
-  "updated": "2026-10-30",
+  "updated": "2026-11-03",
   "modVersion": "0.1.0",
   "areas": [
-    { "id": "farmingdale-ny", "name": "Farmingdale, NY (Republic Airport)", "lat": 40.74, "lon": -73.415, "radiusKm": 2.5, "added": "2026-10-30", "version": "0.1.0" }
+    { "id": "farmingdale-ny", "name": "Farmingdale, NY", "package": "smoother-roads-farmingdale-ny", "lat": 40.7326, "lon": -73.4454, "radiusKm": 15, "added": "2026-11-03", "version": "0.1.0" }
   ]
 }
 </script>
@@ -364,7 +364,8 @@ function check() {
   if (inside) {
     els.badge.className = "badge ok";
     els.badge.textContent = "Covered";
-    els.placeText.textContent = "Inside " + inside.name + ". Install the latest version of the mod to use it.";
+    els.placeText.textContent = "Inside " + inside.name + ". Download Smoother Roads and copy the "
+      + (inside.package ? "\"" + inside.package + "\"" : "region's") + " folder into your Community folder.";
     els.request.style.display = "none";
     clearPreview();
   } else {
