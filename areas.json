@@ -11,6 +11,16 @@
       "radiusKm": 15,
       "added": "2026-11-03",
       "version": "0.1.0"
+    },
+    {
+      "id": "new-york-ny",
+      "name": "New York, NY",
+      "package": "smoother-roads-new-york-ny",
+      "lat": 40.77326,
+      "lon": -73.97369,
+      "radiusKm": 10,
+      "added": "2026-11-03",
+      "version": "0.1.0"
     }
   ]
 }
