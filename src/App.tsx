@@ -1,0 +1,68 @@
+import { useEffect } from "react";
+import { CONFIG } from "./lib/config";
+import { Icon } from "./components/Icon";
+import { Leaderboard } from "./components/Leaderboard";
+import { Legend } from "./components/Legend";
+import { MapHint } from "./components/MapHint";
+import { MapView } from "./components/MapView";
+import { Lightbox, Toast } from "./components/Overlays";
+import { Panel } from "./components/Panel";
+import { Sidebar } from "./components/Sidebar";
+import { useStore } from "./lib/store";
+
+export function App() {
+  const sidebarOpen = useStore((s) => s.sidebarOpen);
+  const sidebarCollapsed = useStore((s) => s.sidebarCollapsed);
+  const patch = useStore((s) => s.patch);
+  const openSubmit = useStore((s) => s.openSubmit);
+
+  useEffect(() => {
+    const { init } = useStore.getState();
+    // Add ?demo to the local dev URL for sample data. It never ships in the production build.
+    if (import.meta.env.DEV && new URLSearchParams(location.search).has("demo")) {
+      import("./lib/demo").then((m) => init(m.demoAreas()));
+    } else {
+      init();
+    }
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const s = useStore.getState();
+      if (s.lightbox) s.patch({ lightbox: null });
+      else if (s.pinMode) s.patch({ pinMode: false });
+      else if (s.panel) s.closePanel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  return (
+    <div className="device">
+      <div className="app-shell">
+        <main className="main">
+          <section className={"view map-view" + (sidebarOpen ? " sb-toggled" : "") + (sidebarCollapsed ? " sb-collapsed" : "")}>
+            <Sidebar />
+            <div className="scrim" onClick={() => patch({ sidebarOpen: false })} />
+            <div className="map-wrap">
+              <MapView />
+              <Legend />
+              <Panel />
+              <MapHint />
+              <button className="fab fab-menu" title="Open list" onClick={() => patch({ sidebarOpen: true })}>
+                <Icon d='<path d="M4 6h16M4 12h16M4 18h16"/>' size={18} weight={2.2} />
+              </button>
+              <button className="fab fab-submit" title="Request Area" onClick={openSubmit}>
+                <Icon d='<path d="M12 5v14M5 12h14"/>' size={16} weight={2.6} />
+              </button>
+              {CONFIG.database && <Leaderboard />}
+            </div>
+          </section>
+        </main>
+      </div>
+      <Lightbox />
+      <Toast />
+    </div>
+  );
+}

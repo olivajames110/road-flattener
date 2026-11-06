@@ -1,0 +1,240 @@
+import { useRef } from "react";
+import { CONFIG } from "../lib/config";
+import { ago, fmtDate, fmtN, hue, initials } from "../lib/format";
+import { coverage, coverageShort } from "../lib/geo";
+import { CATS, STATUS } from "../lib/icons";
+import { useStore } from "../lib/store";
+import type { Area, AreaComment, CommentType } from "../lib/types";
+import { Icon } from "./Icon";
+
+const COMMENT_TYPES: Record<CommentType, string> = { feedback: "Feedback", issue: "Issue", question: "Question" };
+
+function Comment({ comment: c }: { comment: AreaComment }) {
+  const patch = useStore((s) => s.patch);
+  const flyToPoint = useStore((s) => s.flyToPoint);
+  return (
+    <div className="cmt">
+      <div className="avatar" style={{ background: hue(c.author) }}>
+        {initials(c.author)}
+      </div>
+      <div className="cmt-body">
+        <div className="cmt-head">
+          <strong>{c.author}</strong>
+          {c.dev && <span className="dev">DEV</span>}
+          <span className={"tag t-" + c.type}>{COMMENT_TYPES[c.type]}</span>
+          <span className="time">{ago(c.date)}</span>
+        </div>
+        <p>{c.text}</p>
+        {c.image && <img className="cmt-img" src={c.image} alt="Attached screenshot" onClick={() => patch({ lightbox: c.image })} />}
+        {c.pin && (
+          <button className="link" onClick={() => flyToPoint(c.pin!)}>
+            <Icon name="pin" size={14} />
+            View location on map
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Compose() {
+  const comment = useStore((s) => s.comment);
+  const pinMode = useStore((s) => s.pinMode);
+  const setComment = useStore((s) => s.setComment);
+  const patch = useStore((s) => s.patch);
+  const postComment = useStore((s) => s.postComment);
+  const file = useRef<HTMLInputElement>(null);
+
+  const attach = (f?: File) => {
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setComment({ image: String(reader.result) });
+    reader.readAsDataURL(f);
+  };
+
+  return (
+    <div className="compose">
+      <div className="chips">
+        {(Object.keys(COMMENT_TYPES) as CommentType[]).map((t) => (
+          <button
+            key={t}
+            className={"chip" + (comment.type === t ? " on" : "") + (t === "issue" ? " issue" : "")}
+            onClick={() => setComment({ type: t })}
+          >
+            {COMMENT_TYPES[t]}
+          </button>
+        ))}
+      </div>
+      <textarea
+        placeholder={comment.type === "issue" ? "What's wrong, and where?" : "Share your thoughts…"}
+        aria-label="Comment"
+        value={comment.text}
+        onChange={(e) => setComment({ text: e.target.value })}
+      />
+      <div className="attach">
+        {comment.image && (
+          <div className="thumb">
+            <img src={comment.image} alt="Attachment preview" />
+            <button className="xbtn" title="Remove image" onClick={() => setComment({ image: null })}>
+              <Icon name="x" size={11} weight={3} />
+            </button>
+          </div>
+        )}
+        {comment.pin && (
+          <div className="pinchip">
+            <Icon name="pin" size={14} />
+            Location marked
+            <button className="xbtn" title="Remove location" onClick={() => setComment({ pin: null })}>
+              <Icon name="x" size={11} weight={3} />
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="compose-row">
+        <button className="ibtn" title="Attach a screenshot" onClick={() => file.current?.click()}>
+          <Icon name="img" size={18} />
+        </button>
+        <button
+          className={"ibtn" + (pinMode ? " active" : "")}
+          title="Mark a location on the map"
+          onClick={() => patch({ pinMode: !pinMode })}
+        >
+          <Icon name="pin" size={18} />
+        </button>
+        <span className="spacer" />
+        <button className="btn cyan sm" disabled={!comment.text.trim()} onClick={postComment}>
+          Post
+        </button>
+      </div>
+      <input
+        ref={file}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          attach(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+export function DetailPanel({ area: a }: { area: Area }) {
+  const closePanel = useStore((s) => s.closePanel);
+  const toggleVote = useStore((s) => s.toggleVote);
+  const zoomTo = useStore((s) => s.zoomTo);
+  const status = STATUS[a.status];
+  const voted = CONFIG.database && a.voted;
+
+  const feedback = (
+    <>
+      <h3 className="sec-t">
+        Feedback <span>{a.comments.length}</span>
+      </h3>
+      {a.comments.length === 0 ? (
+        <div className="empty">No feedback yet. Be the first.</div>
+      ) : (
+        <div className="cmts">
+          {a.comments.map((c) => (
+            <Comment key={c.id} comment={c} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      <div className="panel-head">
+        <div className="tile" style={{ background: status.tint, color: status.ink }}>
+          <Icon d={CATS[a.cat].icon} size={22} weight={2.2} />
+        </div>
+        <div className="grow">
+          <div className="eyebrow">
+            <span className={"badge s-" + a.status}>{status.label}</span>
+            <span className="badge cat-b">{CATS[a.cat].label}</span>
+          </div>
+          <h2>{a.name}</h2>
+          <div className="sub">{[a.region, a.icao].filter(Boolean).join(" · ")}</div>
+        </div>
+        <button className="ibtn" title="Close" onClick={closePanel}>
+          <Icon name="x" size={18} />
+        </button>
+      </div>
+
+      <div className={"panel-body" + (CONFIG.database ? "" : " short")}>
+        <div className="stats">
+          <div className="stat">
+            <div className="k">Coverage</div>
+            <div className="v">{coverageShort(a.shape)}</div>
+          </div>
+          {CONFIG.database && (
+            <div className="stat">
+              <div className="k">Votes</div>
+              <div className="v">{fmtN(a.votes)}</div>
+            </div>
+          )}
+        </div>
+
+        <div className="actions">
+          <span className="tip" data-tip={CONFIG.database ? undefined : "Coming soon"}>
+            <button
+              className={"btn" + (voted ? " voted" : " cyan")}
+              disabled={!CONFIG.database}
+              onClick={() => toggleVote(a.id)}
+            >
+              <Icon name="up" size={15} weight={2} />
+              {voted ? "Upvoted" : "Upvote"}
+            </button>
+          </span>
+          <button className="btn" onClick={() => zoomTo(a)}>
+            <Icon name="target" size={15} />
+            Zoom to area
+          </button>
+        </div>
+
+        {a.status === "released" && (
+          <>
+            <h3 className="sec-t">Get it</h3>
+            <div className="notes">
+              Download Smoother Roads and copy the{" "}
+              {a.packageName ? <strong>{a.packageName}</strong> : "region's"} folder into your Community folder.
+              {CONFIG.downloadUrl && (
+                <div>
+                  <a className="link" href={CONFIG.downloadUrl} target="_blank" rel="noopener">
+                    Get the mod
+                  </a>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {a.notes && (
+          <>
+            <h3 className="sec-t">Request notes</h3>
+            <div className="notes">{a.notes}</div>
+          </>
+        )}
+        <div className="by">
+          {a.status === "released" ? "Added" : `Submitted by ${a.by}`} · {fmtDate(a.date)} · {coverage(a.shape)}
+        </div>
+
+        {CONFIG.database && feedback}
+      </div>
+
+      {CONFIG.database ? (
+        <Compose />
+      ) : (
+        <div className="soon">
+          <div className="soon-content" inert>
+            <div className="soon-list">{feedback}</div>
+            <Compose />
+          </div>
+          <div className="soon-cover">Coming soon</div>
+        </div>
+      )}
+    </>
+  );
+}
