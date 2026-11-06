@@ -2,6 +2,7 @@ import logo from "../assets/logo.jpg";
 import { CONFIG } from "../lib/config";
 import { useStore } from "../lib/store";
 import { AreaList } from "./AreaList";
+import { HoverTip } from "./HoverTip";
 import { Icon } from "./Icon";
 import { SearchInput } from "./SearchInput";
 
@@ -26,21 +27,42 @@ export function Sidebar() {
               <span className="wm-1">Smoother</span>
               <span className="wm-2">Roads</span>
             </div>
-            <button
-              className="ibtn sb-toggle"
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!collapsed}
-              onClick={() => patch({ sidebarCollapsed: !collapsed })}
-            >
-              <Icon d='<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>' size={18} />
-            </button>
+            <div className="sb-actions">
+              {CONFIG.downloadUrl && (
+                <HoverTip className="ibtn-tip" tip="Get the mod on flightsim.to" place="below">
+                  <a
+                    className="ibtn"
+                    href={CONFIG.downloadUrl}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="Get the mod on flightsim.to"
+                  >
+                    <Icon d='<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>' size={18} />
+                  </a>
+                </HoverTip>
+              )}
+              <HoverTip
+                className="ibtn-tip sb-toggle"
+                tip={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                place="below"
+              >
+                <button
+                  className="ibtn"
+                  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  aria-expanded={!collapsed}
+                  onClick={() => patch({ sidebarCollapsed: !collapsed })}
+                >
+                  <Icon d='<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>' size={18} />
+                </button>
+              </HoverTip>
+            </div>
           </div>
+          <SearchInput placeholder="Search by name, location…" />
           <button className="btn fun block" onClick={openSubmit}>
             <Icon d='<path d="M12 5v14M5 12h14"/>' size={16} weight={2.6} />
             Request Area
           </button>
-          <SearchInput placeholder="Search by name, location…" />
+          <p className="sb-hint">Or right-click anywhere on the map</p>
           {CONFIG.database && (
             <nav className="seg full">
               <button className={view === "map" ? "on" : ""} onClick={() => setView("map")}>

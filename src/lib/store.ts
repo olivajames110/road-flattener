@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { loadAreas, saveLocal, sendRequest } from "./data";
+import { CONFIG } from "./config";
+import { loadAreas, saveLocal, sendRequest, sendSpot } from "./data";
 import { countryOf, norm } from "./format";
 import { boundsOf, centerOf, contains, issueCount, shapeFromDraft } from "./geo";
 import { reversePlace, searchPlace } from "./geocode";
@@ -49,6 +50,8 @@ interface Store {
   placeNote: string;
   pinMode: boolean;
   comment: CommentDraft;
+  spot: LatLng | null;
+  spotNote: string;
   sidebarOpen: boolean;
   sidebarCollapsed: boolean;
   lightbox: string | null;
@@ -80,6 +83,7 @@ interface Store {
   findPlace: () => Promise<void>;
   locate: () => void;
   submitArea: () => Promise<void>;
+  submitSpot: () => Promise<void>;
 }
 
 export const useStore = create<Store>((set, get) => {
@@ -122,6 +126,8 @@ export const useStore = create<Store>((set, get) => {
     placeNote: "",
     pinMode: false,
     comment: newComment(),
+    spot: null,
+    spotNote: "",
     sidebarOpen: false,
     sidebarCollapsed: false,
     lightbox: null,
@@ -160,11 +166,20 @@ export const useStore = create<Store>((set, get) => {
     openDetail(id) {
       const area = get().areas.find((a) => a.id === id);
       if (!area) return;
-      set({ view: "map", panel: "detail", selectedId: id, pinMode: false, comment: newComment(), sidebarOpen: false });
+      set({
+        view: "map",
+        panel: "detail",
+        selectedId: id,
+        pinMode: false,
+        comment: newComment(),
+        spot: null,
+        spotNote: "",
+        sidebarOpen: false,
+      });
       get().zoomTo(area);
     },
 
-    closePanel: () => set({ panel: null, selectedId: null, pinMode: false }),
+    closePanel: () => set({ panel: null, selectedId: null, pinMode: false, spot: null, spotNote: "" }),
 
     zoomTo: (a) => fly(boundsOf(a.shape), 13),
     flyToPoint: (p, zoom = 16) => fly([p, p], zoom),
@@ -203,6 +218,8 @@ export const useStore = create<Store>((set, get) => {
         panel: "submit",
         selectedId: null,
         pinMode: false,
+        spot: null,
+        spotNote: "",
         draft: newDraft(),
         form: newForm(),
         placeQuery: "",
@@ -223,7 +240,7 @@ export const useStore = create<Store>((set, get) => {
     onMapPoint(p) {
       const { pinMode, panel, draft } = get();
       if (pinMode) {
-        set({ pinMode: false, comment: { ...get().comment, pin: p } });
+        set(CONFIG.database ? { pinMode: false, comment: { ...get().comment, pin: p } } : { pinMode: false, spot: p });
         return;
       }
       if (panel !== "submit") return;
@@ -318,6 +335,17 @@ export const useStore = create<Store>((set, get) => {
       const sent = demoMode ? "sent" : await sendRequest(area);
       get().showToast(
         sent === "sent" ? "Area requested. Thanks!" : "Couldn't send directly, so the form opened. Press Submit there.",
+      );
+    },
+
+    async submitSpot() {
+      const { spot, spotNote, selectedId, areas } = get();
+      const area = areas.find((a) => a.id === selectedId);
+      if (!spot || !area) return;
+      set({ spot: null, spotNote: "" });
+      const sent = demoMode ? "sent" : await sendSpot(area, spot, spotNote.trim());
+      get().showToast(
+        sent === "sent" ? "Problem spot sent. Thanks!" : "Couldn't send directly, so the form opened. Press Submit there.",
       );
     },
   };

@@ -5,6 +5,7 @@ import { STATUS } from "../lib/icons";
 import { SORTS, useStore } from "../lib/store";
 import type { Area, GroupBy, Status } from "../lib/types";
 import { useVisible } from "../lib/useVisible";
+import { HoverTip } from "./HoverTip";
 import { Icon } from "./Icon";
 
 interface Group {
@@ -64,18 +65,34 @@ function AreaItem({ area: a }: { area: Area }) {
       onMouseEnter={() => patch({ hoveredId: a.id })}
       onMouseLeave={() => patch({ hoveredId: null })}
     >
-      <span className="sdot item-dot" title={status.label} style={{ background: status.color }} />
+      <HoverTip
+        className="sdot item-dot"
+        label={status.label}
+        tip={status.label}
+        place="above"
+        style={{ background: status.color }}
+      />
       <div className="item-main">
         <div className="item-head">
           <div className="item-title">{a.name}</div>
           {a.noPhotogrammetry && (
-            <span className="no-pg" title="Not a photogrammetry zone">
+            <HoverTip
+              className="no-pg"
+              place="right"
+              label="Not a photogrammetry zone, so final results may not be very noticeable"
+              tip={
+                <>
+                  <strong>Not a photogrammetry zone</strong>
+                  Final results may not be very noticeable.
+                </>
+              }
+            >
               <Icon name="alert" size={13} />
-            </span>
+            </HoverTip>
           )}
         </div>
         <div className="item-sub">
-          <span className="item-place">{a.icao || a.region.split(",")[0]}</span>
+          <span className="item-place">{a.region.split(",")[0]}</span>
           {CONFIG.database && a.comments.length > 0 && (
             <span>
               <Icon name="cmt" size={12} />

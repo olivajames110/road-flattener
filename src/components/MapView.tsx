@@ -85,6 +85,7 @@ export function MapView() {
   const panel = useStore((s) => s.panel);
   const pinMode = useStore((s) => s.pinMode);
   const commentPin = useStore((s) => s.comment.pin);
+  const spot = useStore((s) => s.spot);
   const selected = useStore((s) => s.areas.find((a) => a.id === s.selectedId));
   const fly = useStore((s) => s.fly);
 
@@ -230,14 +231,18 @@ export function MapView() {
   useEffect(() => {
     const l = layers.current!;
     l.pins.clearLayers();
-    if (!CONFIG.database) return;
     const dot = (p: L.LatLngExpression, color: string) =>
       L.circleMarker(p, { radius: 7, color: "#fff", weight: 2, fillColor: color, fillOpacity: 1 }).addTo(l.pins);
+    for (const s of selected?.spots ?? []) {
+      dot(s.pin, ISSUE).bindTooltip(esc(s.note || "Problem spot"), { direction: "top" });
+    }
+    if (spot) dot(spot, ISSUE);
+    if (!CONFIG.database) return;
     for (const c of selected?.comments ?? []) {
       if (c.pin) dot(c.pin, c.type === "issue" ? ISSUE : ACCENT).bindTooltip(esc(c.author), { direction: "top" });
     }
     if (commentPin) dot(commentPin, ACCENT);
-  }, [selected, commentPin]);
+  }, [selected, commentPin, spot]);
 
   useEffect(() => {
     const l = layers.current;

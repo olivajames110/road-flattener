@@ -120,6 +120,68 @@ function Compose() {
   );
 }
 
+function ProblemSpot({ area: a }: { area: Area }) {
+  const spot = useStore((s) => s.spot);
+  const spotNote = useStore((s) => s.spotNote);
+  const pinMode = useStore((s) => s.pinMode);
+  const patch = useStore((s) => s.patch);
+  const submitSpot = useStore((s) => s.submitSpot);
+  const flyToPoint = useStore((s) => s.flyToPoint);
+  const spots = a.spots ?? [];
+
+  return (
+    <div className="spot">
+      <h3 className="sec-t">
+        Problem spots {spots.length > 0 && <span>{spots.length}</span>}
+      </h3>
+      <div className={"spot-note" + (a.noPhotogrammetry ? " warn" : "")}>
+        {a.noPhotogrammetry
+          ? "This isn't a photogrammetry zone, so improvements across the whole area are hard to achieve and may not be very noticeable. Marking specific rough spots helps most, since every road can't be checked by hand."
+          : "Found a rough stretch of road? Mark the exact spot so it can be checked."}
+      </div>
+      {spots.length > 0 && (
+        <div className="spot-list">
+          {spots.map((s, i) => (
+            <button key={i} className="spot-row" title="Show on map" onClick={() => flyToPoint(s.pin)}>
+              <Icon name="pin" size={14} />
+              <span className="grow">{s.note || "No details given"}</span>
+              <span className="spot-date">{fmtDate(s.date)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {spot ? (
+        <>
+          <div className="pinchip">
+            <Icon name="pin" size={14} />
+            Spot marked
+            <button className="xbtn" title="Remove spot" onClick={() => patch({ spot: null })}>
+              <Icon name="x" size={11} weight={3} />
+            </button>
+          </div>
+          <textarea
+            placeholder="What's wrong here? (optional)"
+            aria-label="Describe the problem"
+            value={spotNote}
+            onChange={(e) => patch({ spotNote: e.target.value })}
+          />
+          <div className="spot-send">
+            <button className="btn cyan sm" onClick={submitSpot}>Send spot</button>
+          </div>
+        </>
+      ) : (
+        <button
+          className={"btn sm spot-mark" + (pinMode ? " voted" : "")}
+          onClick={() => patch({ pinMode: !pinMode })}
+        >
+          <Icon name="pin" size={14} />
+          {pinMode ? "Click the map…" : "Select and mark a problem spot"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function DetailPanel({ area: a }: { area: Area }) {
   const closePanel = useStore((s) => s.closePanel);
   const toggleVote = useStore((s) => s.toggleVote);
@@ -221,7 +283,7 @@ export function DetailPanel({ area: a }: { area: Area }) {
           {a.status === "released" ? "Added" : `Submitted by ${a.by}`} · {fmtDate(a.date)} · {coverage(a.shape)}
         </div>
 
-        {CONFIG.database && feedback}
+        {CONFIG.database ? feedback : <ProblemSpot area={a} />}
       </div>
 
       {CONFIG.database ? (

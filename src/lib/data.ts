@@ -1,7 +1,7 @@
 import { CONFIG } from "./config";
 import { centerOf, enclosingRadiusKm } from "./geo";
 import { CATS } from "./icons";
-import type { Area, AreaComment, Cat, Status } from "./types";
+import type { Area, AreaComment, Cat, LatLng, Status } from "./types";
 
 const STORAGE_KEY = "smoother-roads:v2";
 
@@ -26,8 +26,10 @@ interface PublishedArea {
   lat: number;
   lon: number;
   radiusKm: number;
+  perimeter?: LatLng[]; // Replaces the circle when a pack isn't round
   added: string;
   version?: string;
+  spots?: { lat: number; lon: number; note: string; added: string }[];
 }
 
 function readSaved(): Saved {
@@ -56,6 +58,8 @@ export function saveLocal(areas: Area[]) {
   }
 }
 
+const dateOf = (added: string) => new Date(added + "T00:00:00").getTime();
+
 function toArea(a: PublishedArea): Area {
   return {
     id: a.id,
@@ -69,10 +73,13 @@ function toArea(a: PublishedArea): Area {
     votes: a.votes ?? 0,
     voted: false,
     by: a.by ?? "Smoother Roads",
-    date: new Date(a.added + "T00:00:00").getTime(),
+    date: dateOf(a.added),
     notes: "",
-    shape: { type: "circle", center: [a.lat, a.lon], radius: a.radiusKm * 1000 },
+    shape: a.perimeter
+      ? { type: "polygon", points: a.perimeter }
+      : { type: "circle", center: [a.lat, a.lon], radius: a.radiusKm * 1000 },
     comments: [],
+    spots: a.spots?.map((s) => ({ pin: [s.lat, s.lon], note: s.note, date: dateOf(s.added) })),
     packageName: a.package,
     version: a.version,
   };
@@ -118,10 +125,20 @@ function formParams(a: Area) {
   return params;
 }
 
+function spotParams(a: Area, p: LatLng, note: string) {
+  const f = CONFIG.formFields;
+  const params = new URLSearchParams();
+  params.set(f.place, "Problem spot: " + a.name);
+  params.set(f.lat, p[0].toFixed(5));
+  params.set(f.lon, p[1].toFixed(5));
+  params.set(f.radius, "0");
+  params.set(f.notes, note);
+  return params;
+}
+
 export type SendResult = "sent" | "form-opened";
 
-export async function sendRequest(a: Area): Promise<SendResult> {
-  const params = formParams(a);
+async function send(params: URLSearchParams): Promise<SendResult> {
   try {
     // Google Forms doesn't allow reading the response cross-origin, so a completed request counts as sent
     await fetch(CONFIG.formUrl.replace(/\/viewform.*$/, "/formResponse"), {
@@ -137,3 +154,6 @@ export async function sendRequest(a: Area): Promise<SendResult> {
     return "form-opened";
   }
 }
+
+export const sendRequest = (a: Area) => send(formParams(a));
+export const sendSpot = (a: Area, p: LatLng, note: string) => send(spotParams(a, p, note));

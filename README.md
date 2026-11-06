@@ -4,10 +4,10 @@ Drivable roads for ground vehicles in Microsoft Flight Simulator 2024.
 
 **Check coverage and request your area:** https://olivajames110.github.io/smoother-roads/
 
-Smoother Roads removes broken photogrammetry in a narrow strip along real roads and lays a smooth
-surface that follows the road's height, so cars, UTVs and other ground vehicles can drive without
-hitting spikes. Everything off the road keeps its photogrammetry. Coverage comes as region packs,
-added based on requests.
+Smoother Roads removes the broken photogrammetry along real roads and lays a smooth surface that
+follows the road's height, so cars, UTVs and other ground vehicles can drive without hitting spikes.
+Scanned buildings are kept, and melted scanned trees are removed along roads and in open areas so
+the sim's own trees show instead. Coverage comes as region packs, added based on requests.
 
 ## Files
 
@@ -34,21 +34,22 @@ Add an entry to `areas` in `public/areas.json` and commit:
 ```json
 {
   "id": "farmingdale-ny",
-  "name": "Farmingdale, NY",
+  "name": "Farmingdale/Massapequa, NY",
   "region": "New York, United States",
   "country": "United States",
   "icao": "KFRG",
   "cat": "town",
   "noPhotogrammetry": false,
   "package": "smoother-roads-farmingdale-ny",
-  "lat": 40.7326,
-  "lon": -73.4454,
-  "radiusKm": 15,
+  "lat": 40.69605,
+  "lon": -73.498952,
+  "radiusKm": 5,
   "added": "2026-11-03",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
 ```
 
+A region that isn't round can add `"perimeter": [[lat, lon], ...]`, which replaces the circle on the map.
 `cat` is one of `city`, `town`, `airport`, `mountain`, `coastal`, `race`, `island`. Set `noPhotogrammetry` to
 `true` to show the amber caution beside an area outside a photogrammetry zone. Also update `"updated"`
 and `"modVersion"` at the top. Only publish a region once the version that contains it is live on

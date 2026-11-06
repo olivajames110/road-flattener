@@ -21,6 +21,12 @@ export interface AreaComment {
   local?: boolean; // Only stored in this browser until the database exists
 }
 
+export interface ProblemSpot {
+  pin: LatLng;
+  note: string;
+  date: number;
+}
+
 export interface Area {
   id: string;
   name: string;
@@ -37,6 +43,7 @@ export interface Area {
   notes: string;
   shape: Shape;
   comments: AreaComment[];
+  spots?: ProblemSpot[];
   packageName?: string;
   version?: string;
   local?: boolean; // Only stored in this browser until the database exists

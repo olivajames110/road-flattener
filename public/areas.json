@@ -1,21 +1,21 @@
 {
   "updated": "2026-11-06",
-  "modVersion": "0.1.0",
+  "modVersion": "0.2.0",
   "areas": [
     {
       "id": "farmingdale-ny",
-      "name": "Farmingdale, NY",
+      "name": "Farmingdale/Massapequa, NY",
       "region": "New York, United States",
       "country": "United States",
       "icao": "KFRG",
       "cat": "town",
       "noPhotogrammetry": false,
       "package": "smoother-roads-farmingdale-ny",
-      "lat": 40.7326,
-      "lon": -73.4454,
-      "radiusKm": 15,
+      "lat": 40.69605,
+      "lon": -73.498952,
+      "radiusKm": 5,
       "added": "2026-11-03",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "id": "new-york-ny",
@@ -29,8 +29,30 @@
       "lat": 40.77326,
       "lon": -73.97369,
       "radiusKm": 10,
+      "perimeter": [
+        [40.8496, -73.9566],
+        [40.8567, -73.9451],
+        [40.859, -73.9344],
+        [40.8325, -73.9255],
+        [40.8114, -73.9306],
+        [40.7953, -73.9289],
+        [40.7758, -73.943],
+        [40.7629, -73.9378],
+        [40.737, -73.9515],
+        [40.7257, -73.9481],
+        [40.7063, -73.9579],
+        [40.6972, -73.9728],
+        [40.6992, -73.992],
+        [40.6917, -73.9963],
+        [40.6901, -74.0219],
+        [40.7063, -74.0283],
+        [40.7354, -74.0296],
+        [40.7645, -74.0176],
+        [40.7936, -73.992],
+        [40.8292, -73.9686]
+      ],
       "added": "2026-11-03",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "id": "courchevel-france",
@@ -48,7 +70,7 @@
       "radiusKm": 10,
       "added": "2026-11-04",
       "package": "smoother-roads-courchevel-france",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "id": "annecy-france",
@@ -74,7 +96,7 @@
       "icao": "",
       "cat": "city",
       "noPhotogrammetry": false,
-      "status": "requested",
+      "status": "progress",
       "votes": 1,
       "by": "Community",
       "lat": 28.53567,
@@ -90,13 +112,15 @@
       "icao": "",
       "cat": "town",
       "noPhotogrammetry": false,
-      "status": "requested",
+      "status": "released",
       "votes": 1,
       "by": "Community",
       "lat": 41.50394,
       "lon": -81.48313,
-      "radiusKm": 20,
-      "added": "2026-11-04"
+      "radiusKm": 10,
+      "added": "2026-11-04",
+      "package": "smoother-roads-lyndhurst-oh",
+      "version": "0.2.0"
     },
     {
       "id": "bad-zwischenahn-germany",
@@ -146,7 +170,7 @@
       "radiusKm": 10,
       "added": "2026-11-04",
       "package": "smoother-roads-salt-lake-city-ut",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "id": "ogden-ut",
@@ -204,7 +228,7 @@
       "icao": "",
       "cat": "city",
       "noPhotogrammetry": false,
-      "status": "requested",
+      "status": "progress",
       "votes": 1,
       "by": "Community",
       "lat": -38.14932,
@@ -260,7 +284,7 @@
       "radiusKm": 10,
       "added": "2026-11-05",
       "package": "smoother-roads-karlsruhe-germany",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "id": "pforzheim-germany",
@@ -270,7 +294,7 @@
       "icao": "",
       "cat": "city",
       "noPhotogrammetry": true,
-      "status": "requested",
+      "status": "progress",
       "votes": 1,
       "by": "Community",
       "lat": 48.89093,
@@ -286,7 +310,7 @@
       "icao": "",
       "cat": "city",
       "noPhotogrammetry": false,
-      "status": "requested",
+      "status": "progress",
       "votes": 1,
       "by": "Community",
       "lat": 32.81325,
@@ -318,7 +342,7 @@
       "icao": "",
       "cat": "city",
       "noPhotogrammetry": false,
-      "status": "requested",
+      "status": "progress",
       "votes": 1,
       "by": "Community",
       "lat": 41.89332,
