@@ -51,7 +51,7 @@ const shapeStyle = (a: Area, on: boolean): L.PathOptions => ({
 });
 
 function tooltip(a: Area) {
-  const votes = CONFIG.database ? ` · ${fmtN(a.votes)} votes` : "";
+  const votes = CONFIG.votes ? ` · ${fmtN(a.votes)} votes` : "";
   return `${esc(a.name)}<span class="tt-sub">${STATUS[a.status].label}${votes}</span>`;
 }
 

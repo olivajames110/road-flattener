@@ -1,3 +1,4 @@
+import { CONFIG } from "../lib/config";
 import { useMemo } from "react";
 import { fmtDate, fmtN } from "../lib/format";
 import { coverageShort, issueCount } from "../lib/geo";
@@ -60,7 +61,7 @@ export function Leaderboard() {
           >
             <option value="votes">Most votes</option>
             <option value="new">Newest</option>
-            <option value="issues">Most issues</option>
+            {CONFIG.database && <option value="issues">Most issues</option>}
           </select>
         </div>
         <div className="tcard">
@@ -72,7 +73,7 @@ export function Leaderboard() {
                 <th className="col-air">Airport</th>
                 <th className="col-cov">Coverage</th>
                 <th className="col-status">Status</th>
-                <th className="col-cmt">Feedback</th>
+                {CONFIG.database && <th className="col-cmt">Feedback</th>}
                 <th className="col-date">Submitted</th>
                 <th className="col-votes" style={{ textAlign: "right" }}>Votes</th>
               </tr>
@@ -98,7 +99,7 @@ export function Leaderboard() {
                     <td className="col-air mono mut">{a.icao || "—"}</td>
                     <td className="col-cov mono mut">{coverageShort(a.shape)}</td>
                     <td className="col-status"><span className={"badge s-" + a.status}>{STATUS[a.status].label}</span></td>
-                    <td className="col-cmt mono">
+                    {CONFIG.database && <td className="col-cmt mono">
                       {issues > 0 ? (
                         <span className="issue-n">
                           <Icon name="alert" size={13} />
@@ -107,7 +108,7 @@ export function Leaderboard() {
                       ) : (
                         <span className="mut">{a.comments.length}</span>
                       )}
-                    </td>
+                    </td>}
                     <td className="col-date mut">{fmtDate(a.date)}</td>
                     <td className="col-votes" style={{ textAlign: "right" }}>
                       <button

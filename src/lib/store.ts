@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { CONFIG } from "./config";
 import { loadAreas, saveLocal, sendRequest, sendSpot } from "./data";
+import { setVote } from "./votes";
 import { countryOf, norm } from "./format";
 import { boundsOf, centerOf, contains, issueCount, shapeFromDraft } from "./geo";
 import { reversePlace, searchPlace } from "./geocode";
@@ -27,6 +28,7 @@ const newComment = (): CommentDraft => ({ type: "feedback", text: "", image: nul
 let demoMode = false;
 let flyNonce = 0;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
+const voting = new Set<string>();
 
 const persist = (areas: Area[]) => {
   if (!demoMode) saveLocal(areas);
@@ -185,11 +187,24 @@ export const useStore = create<Store>((set, get) => {
     flyToPoint: (p, zoom = 16) => fly([p, p], zoom),
 
     toggleVote(id) {
-      const areas = get().areas.map((a) =>
-        a.id === id ? { ...a, voted: !a.voted, votes: a.votes + (a.voted ? -1 : 1) } : a,
-      );
+      const area = get().areas.find((a) => a.id === id);
+      if (!area || voting.has(id)) return;
+      const flip = (a: Area): Area =>
+        a.id === id ? { ...a, voted: !a.voted, votes: a.votes + (a.voted ? -1 : 1) } : a;
+      const areas = get().areas.map(flip);
       set({ areas });
-      persist(areas);
+      if (demoMode || area.local || !CONFIG.votes) {
+        persist(areas);
+        return;
+      }
+      // Shown right away, undone if the database refuses it
+      voting.add(id);
+      setVote(id, !area.voted)
+        .catch(() => {
+          set({ areas: get().areas.map(flip) });
+          get().showToast("Couldn't save your vote. Please try again.");
+        })
+        .finally(() => voting.delete(id));
     },
 
     postComment() {

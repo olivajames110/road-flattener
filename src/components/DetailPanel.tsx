@@ -187,7 +187,7 @@ export function DetailPanel({ area: a }: { area: Area }) {
   const toggleVote = useStore((s) => s.toggleVote);
   const zoomTo = useStore((s) => s.zoomTo);
   const status = STATUS[a.status];
-  const voted = CONFIG.database && a.voted;
+  const voted = CONFIG.votes && a.voted;
 
   const feedback = (
     <>
@@ -231,7 +231,7 @@ export function DetailPanel({ area: a }: { area: Area }) {
             <div className="k">Coverage</div>
             <div className="v">{coverageShort(a.shape)}</div>
           </div>
-          {CONFIG.database && (
+          {CONFIG.votes && (
             <div className="stat">
               <div className="k">Votes</div>
               <div className="v">{fmtN(a.votes)}</div>
@@ -240,10 +240,10 @@ export function DetailPanel({ area: a }: { area: Area }) {
         </div>
 
         <div className="actions">
-          <span className="tip" data-tip={CONFIG.database ? undefined : "Coming soon"}>
+          <span className="tip" data-tip={CONFIG.votes ? undefined : "Coming soon"}>
             <button
               className={"btn" + (voted ? " voted" : " cyan")}
-              disabled={!CONFIG.database}
+              disabled={!CONFIG.votes}
               onClick={() => toggleVote(a.id)}
             >
               <Icon name="up" size={15} weight={2} />

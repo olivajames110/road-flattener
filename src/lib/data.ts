@@ -2,6 +2,7 @@ import { CONFIG } from "./config";
 import { centerOf, enclosingRadiusKm } from "./geo";
 import { CATS } from "./icons";
 import type { Area, AreaComment, Cat, LatLng, Status } from "./types";
+import { fetchVotes } from "./votes";
 
 const STORAGE_KEY = "smoother-roads:v2";
 
@@ -97,8 +98,17 @@ export async function loadAreas(): Promise<Area[]> {
   }
 
   const saved = readSaved();
+  if (CONFIG.votes) {
+    // Shared totals replace the counts in areas.json; if they can't load, show none
+    const { counts, mine } = await fetchVotes().catch(() => ({
+      counts: new Map<string, number>(),
+      mine: new Set<string>(),
+    }));
+    published = published.map((a) => ({ ...a, votes: counts.get(a.id) ?? 0, voted: mine.has(a.id) }));
+  }
   return [...published, ...saved.submitted].map((a) => {
-    const voted = saved.voted.includes(a.id);
+    const voted = a.voted || saved.voted.includes(a.id);
+    if (CONFIG.votes && !a.local) return { ...a, comments: [...a.comments, ...(saved.comments[a.id] ?? [])] };
     return {
       ...a,
       voted,

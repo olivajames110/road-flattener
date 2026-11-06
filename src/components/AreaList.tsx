@@ -42,7 +42,7 @@ function buildGroups(list: Area[], group: GroupBy): Group[] {
       items: sorted.filter((a) => letter(a) === l),
     }));
   }
-  const ranked = [...list].sort(CONFIG.database ? SORTS.votes : byName);
+  const ranked = [...list].sort(CONFIG.votes ? SORTS.votes : byName);
   return STATUS_ORDER.filter((s) => list.some((a) => a.status === s)).map((s) => ({
     key: s,
     label: STATUS[s].label,
@@ -101,7 +101,7 @@ function AreaItem({ area: a }: { area: Area }) {
           )}
         </div>
       </div>
-      {CONFIG.database && (
+      {CONFIG.votes && (
         <div className={"votes-pill" + (a.voted ? " on" : "")}>
           <Icon name="up" size={13} weight={2} />
           {fmtN(a.votes)}
@@ -137,7 +137,7 @@ export function AreaList() {
           >
             <option value="country">Countries</option>
             <option value="az">A–Z</option>
-            {CONFIG.database && <option value="votes">Top voted</option>}
+            {CONFIG.votes && <option value="votes">Top voted</option>}
             <option value="new">Newest</option>
             <option value="status">By status</option>
           </select>

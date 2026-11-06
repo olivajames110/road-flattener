@@ -63,7 +63,7 @@ export function Sidebar() {
             Request Area
           </button>
           <p className="sb-hint">Or right-click anywhere on the map</p>
-          {CONFIG.database && (
+          {CONFIG.leaderboard && (
             <nav className="seg full">
               <button className={view === "map" ? "on" : ""} onClick={() => setView("map")}>
                 <Icon d='<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>' size={15} />

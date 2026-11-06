@@ -56,7 +56,7 @@ export function App() {
               <button className="fab fab-submit" title="Request Area" onClick={openSubmit}>
                 <Icon d='<path d="M12 5v14M5 12h14"/>' size={16} weight={2.6} />
               </button>
-              {CONFIG.database && <Leaderboard />}
+              {CONFIG.leaderboard && <Leaderboard />}
             </div>
           </section>
         </main>
