@@ -99,7 +99,7 @@ function Compose() {
         {comment.pin && (
           <div className="pinchip">
             <Icon name="pin" size={14} />
-            Location marked
+            Spot pinned to this comment
             <button className="xbtn" title="Remove location" onClick={() => setComment({ pin: null })}>
               <Icon name="x" size={11} weight={3} />
             </button>
@@ -116,10 +116,11 @@ function Compose() {
         <button
           className={"btn sm" + (pinMode ? " voted" : "")}
           aria-pressed={pinMode}
+          title="Attach a map location to this comment"
           onClick={() => patch({ pinMode: !pinMode })}
         >
           <Icon name="pin" size={16} />
-          {pinMode ? "Click the map" : comment.pin ? "Move location" : "Add location"}
+          {pinMode ? "Now click the map" : comment.pin ? "Move pin" : "Pin a spot on the map"}
         </button>
         <button className="btn cyan sm" disabled={!comment.text.trim() || posting} onClick={postComment}>
           {posting ? "Posting…" : "Post"}
