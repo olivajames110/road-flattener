@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { CONFIG } from "./config";
+import { addComment } from "./comments";
 import { loadAreas, saveLocal, sendRequest, sendSpot } from "./data";
 import { setVote } from "./votes";
 import { countryOf, norm } from "./format";
@@ -30,6 +31,15 @@ let flyNonce = 0;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 const voting = new Set<string>();
 
+const NAME_KEY = "smoother-roads:name";
+function savedName() {
+  try {
+    return localStorage.getItem(NAME_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 const persist = (areas: Area[]) => {
   if (!demoMode) saveLocal(areas);
 };
@@ -52,19 +62,22 @@ interface Store {
   placeNote: string;
   pinMode: boolean;
   comment: CommentDraft;
+  commenter: string;
+  posting: boolean;
   spot: LatLng | null;
   spotNote: string;
   sidebarOpen: boolean;
   sidebarCollapsed: boolean;
   lightbox: string | null;
   toast: string | null;
+  toastFailed: boolean;
   fly: FlyRequest | null;
 
   init: (demo?: Area[]) => Promise<void>;
   patch: (patch: Partial<Store>) => void;
   setForm: (patch: Partial<SubmitForm>) => void;
   setComment: (patch: Partial<CommentDraft>) => void;
-  showToast: (message: string) => void;
+  showToast: (message: string, failed?: boolean) => void;
   toggleStatus: (s: Status) => void;
   toggleGroup: (key: string) => void;
   setView: (v: View) => void;
@@ -73,7 +86,7 @@ interface Store {
   zoomTo: (a: Area) => void;
   flyToPoint: (p: LatLng, zoom?: number) => void;
   toggleVote: (id: string) => void;
-  postComment: () => void;
+  postComment: () => Promise<void>;
   openSubmit: () => void;
   requestAt: (p: LatLng, zoom: number) => void;
   setDrawType: (t: Draft["type"]) => void;
@@ -128,12 +141,15 @@ export const useStore = create<Store>((set, get) => {
     placeNote: "",
     pinMode: false,
     comment: newComment(),
+    commenter: savedName(),
+    posting: false,
     spot: null,
     spotNote: "",
     sidebarOpen: false,
     sidebarCollapsed: false,
     lightbox: null,
     toast: null,
+    toastFailed: false,
     fly: null,
 
     async init(demo) {
@@ -145,9 +161,9 @@ export const useStore = create<Store>((set, get) => {
     setForm: (patch) => set({ form: { ...get().form, ...patch } }),
     setComment: (patch) => set({ comment: { ...get().comment, ...patch } }),
 
-    showToast(message) {
+    showToast(message, failed = false) {
       clearTimeout(toastTimer);
-      set({ toast: message });
+      set({ toast: message, toastFailed: failed });
       toastTimer = setTimeout(() => set({ toast: null }), 3200);
     },
 
@@ -202,15 +218,43 @@ export const useStore = create<Store>((set, get) => {
       setVote(id, !area.voted)
         .catch(() => {
           set({ areas: get().areas.map(flip) });
-          get().showToast("Couldn't save your vote. Please try again.");
+          get().showToast("Couldn't save your vote. Please try again.", true);
         })
         .finally(() => voting.delete(id));
     },
 
-    postComment() {
-      const { comment, selectedId, areas } = get();
+    async postComment() {
+      const { comment, selectedId, areas, commenter, posting } = get();
       const text = comment.text.trim();
-      if (!text || !selectedId) return;
+      if (!text || !selectedId || posting) return;
+      if (CONFIG.database && !demoMode) {
+        const author = commenter.trim().slice(0, 40) || "Anonymous";
+        set({ posting: true });
+        try {
+          const saved = await addComment(selectedId, author, comment.type, text, comment.pin);
+          set({
+            areas: get().areas.map((a) => (a.id === selectedId ? { ...a, comments: [...a.comments, saved] } : a)),
+            comment: newComment(),
+            pinMode: false,
+          });
+          try {
+            localStorage.setItem(NAME_KEY, commenter.trim());
+          } catch {
+            // Only means the name isn't remembered
+          }
+          get().showToast("Comment posted");
+        } catch (e) {
+          get().showToast(
+            String((e as Error).message).includes("rate_limited")
+              ? "You're posting quite fast. Please try again later."
+              : "Couldn't post your comment. Please try again.",
+            true,
+          );
+        } finally {
+          set({ posting: false });
+        }
+        return;
+      }
       const posted: AreaComment = {
         id: crypto.randomUUID(),
         author: "You",
@@ -350,6 +394,7 @@ export const useStore = create<Store>((set, get) => {
       const sent = demoMode ? "sent" : await sendRequest(area);
       get().showToast(
         sent === "sent" ? "Area requested. Thanks!" : "Couldn't send directly, so the form opened. Press Submit there.",
+        sent !== "sent",
       );
     },
 
@@ -361,6 +406,7 @@ export const useStore = create<Store>((set, get) => {
       const sent = demoMode ? "sent" : await sendSpot(area, spot, spotNote.trim());
       get().showToast(
         sent === "sent" ? "Problem spot sent. Thanks!" : "Couldn't send directly, so the form opened. Press Submit there.",
+        sent !== "sent",
       );
     },
   };

@@ -19,6 +19,8 @@ export interface AreaComment {
   pin?: LatLng;
   date: number;
   local?: boolean; // Only stored in this browser until the database exists
+  hidden?: boolean; // Hidden from visitors; only an admin receives these
+  replyTo?: string; // The comment this one answers
 }
 
 export interface ProblemSpot {

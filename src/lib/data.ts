@@ -2,6 +2,7 @@ import { CONFIG } from "./config";
 import { centerOf, enclosingRadiusKm } from "./geo";
 import { CATS } from "./icons";
 import type { Area, AreaComment, Cat, LatLng, Status } from "./types";
+import { fetchComments, fetchStatuses } from "./comments";
 import { fetchVotes } from "./votes";
 
 const STORAGE_KEY = "smoother-roads:v2";
@@ -86,7 +87,7 @@ function toArea(a: PublishedArea): Area {
   };
 }
 
-export async function loadAreas(): Promise<Area[]> {
+export async function loadAreas(withHidden = false): Promise<Area[]> {
   let published: Area[] = [];
   try {
     const res = await fetch(import.meta.env.BASE_URL + "areas.json", { cache: "no-store" });
@@ -105,6 +106,18 @@ export async function loadAreas(): Promise<Area[]> {
       mine: new Set<string>(),
     }));
     published = published.map((a) => ({ ...a, votes: counts.get(a.id) ?? 0, voted: mine.has(a.id) }));
+  }
+  if (CONFIG.database) {
+    const [comments, statuses] = await Promise.all([
+      fetchComments().catch(() => new Map<string, AreaComment[]>()),
+      fetchStatuses().catch(() => new Map<string, Status>()),
+    ]);
+    published = published.map((a) => ({
+      ...a,
+      status: statuses.get(a.id) ?? a.status,
+      comments: (comments.get(a.id) ?? []).filter((c) => withHidden || !c.hidden),
+    }));
+    saved.comments = {}; // Comments from before the database stayed in one browser
   }
   return [...published, ...saved.submitted].map((a) => {
     const voted = a.voted || saved.voted.includes(a.id);

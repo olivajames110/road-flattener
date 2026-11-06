@@ -3,8 +3,12 @@ export const CONFIG = {
   votes: true,
   // The Map/Leaderboard switch and the leaderboard page
   leaderboard: false,
-  // Comments and feedback: turn on once they're connected to Supabase
-  database: false,
+  // Comments and feedback
+  database: true,
+  // Screenshot uploads on comments: turn on once approval is built
+  screenshots: false,
+  // Shown under the comment box for removal requests
+  contactEmail: "olivajames110@gmail.com",
   supabase: {
     url: "https://wdeeyvzdrsakphgdnwhv.supabase.co",
     key: "sb_publishable_X-K3J7779urJP8FPgA5HJA_F0cl9T7L", // Public by design; the database rules protect the data

@@ -9,7 +9,7 @@ import { Icon } from "./Icon";
 
 const COMMENT_TYPES: Record<CommentType, string> = { feedback: "Feedback", issue: "Issue", question: "Question" };
 
-function Comment({ comment: c }: { comment: AreaComment }) {
+function Comment({ comment: c, parent }: { comment: AreaComment; parent?: AreaComment }) {
   const patch = useStore((s) => s.patch);
   const flyToPoint = useStore((s) => s.flyToPoint);
   return (
@@ -24,6 +24,11 @@ function Comment({ comment: c }: { comment: AreaComment }) {
           <span className={"tag t-" + c.type}>{COMMENT_TYPES[c.type]}</span>
           <span className="time">{ago(c.date)}</span>
         </div>
+        {parent && (
+          <div className="cmt-reply">
+            Replying to <strong>{parent.author}</strong>: {parent.text}
+          </div>
+        )}
         <p>{c.text}</p>
         {c.image && <img className="cmt-img" src={c.image} alt="Attached screenshot" onClick={() => patch({ lightbox: c.image })} />}
         {c.pin && (
@@ -43,6 +48,8 @@ function Compose() {
   const setComment = useStore((s) => s.setComment);
   const patch = useStore((s) => s.patch);
   const postComment = useStore((s) => s.postComment);
+  const commenter = useStore((s) => s.commenter);
+  const posting = useStore((s) => s.posting);
   const file = useRef<HTMLInputElement>(null);
 
   const attach = (f?: File) => {
@@ -65,8 +72,17 @@ function Compose() {
           </button>
         ))}
       </div>
+      <input
+        className="input"
+        placeholder="Your name (optional)"
+        aria-label="Your name"
+        maxLength={40}
+        value={commenter}
+        onChange={(e) => patch({ commenter: e.target.value })}
+      />
       <textarea
         placeholder={comment.type === "issue" ? "What's wrong, and where?" : "Share your thoughts…"}
+        maxLength={2000}
         aria-label="Comment"
         value={comment.text}
         onChange={(e) => setComment({ text: e.target.value })}
@@ -91,21 +107,31 @@ function Compose() {
         )}
       </div>
       <div className="compose-row">
-        <button className="ibtn" title="Attach a screenshot" onClick={() => file.current?.click()}>
-          <Icon name="img" size={18} />
-        </button>
+        <span className="spacer" />
+        {CONFIG.screenshots && (
+          <button className="ibtn" title="Attach a screenshot" onClick={() => file.current?.click()}>
+            <Icon name="img" size={18} />
+          </button>
+        )}
         <button
-          className={"ibtn" + (pinMode ? " active" : "")}
-          title="Mark a location on the map"
+          className={"btn sm" + (pinMode ? " voted" : "")}
+          aria-pressed={pinMode}
           onClick={() => patch({ pinMode: !pinMode })}
         >
-          <Icon name="pin" size={18} />
+          <Icon name="pin" size={16} />
+          {pinMode ? "Click the map" : comment.pin ? "Move location" : "Add location"}
         </button>
-        <span className="spacer" />
-        <button className="btn cyan sm" disabled={!comment.text.trim()} onClick={postComment}>
-          Post
+        <button className="btn cyan sm" disabled={!comment.text.trim() || posting} onClick={postComment}>
+          {posting ? "Posting…" : "Post"}
         </button>
       </div>
+      <p className="compose-note">
+        Comments are public. To have something removed, email{" "}
+        <a className="link" href={"mailto:" + CONFIG.contactEmail}>
+          {CONFIG.contactEmail}
+        </a>
+        .
+      </p>
       <input
         ref={file}
         type="file"
@@ -199,7 +225,7 @@ export function DetailPanel({ area: a }: { area: Area }) {
       ) : (
         <div className="cmts">
           {a.comments.map((c) => (
-            <Comment key={c.id} comment={c} />
+            <Comment key={c.id} comment={c} parent={a.comments.find((p) => p.id === c.replyTo)} />
           ))}
         </div>
       )}

@@ -14,13 +14,14 @@ export function Lightbox() {
 
 export function Toast() {
   const toast = useStore((s) => s.toast);
+  const failed = useStore((s) => s.toastFailed);
   const [text, setText] = useState("");
   useEffect(() => {
     if (toast) setText(toast);
   }, [toast]);
   return (
-    <div className={"toast" + (toast ? " show" : "")} role="status">
-      <Icon name="check" size={16} weight={3} />
+    <div className={"toast" + (toast ? " show" : "") + (failed ? " failed" : "")} role="status">
+      <Icon name={failed ? "alert" : "check"} size={16} weight={failed ? 2.4 : 3} />
       {text}
     </div>
   );
