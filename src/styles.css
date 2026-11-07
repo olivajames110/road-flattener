@@ -201,6 +201,8 @@ textarea{height:auto;padding:10px 12px;resize:vertical;min-height:76px;line-heig
 .sec-t span{text-transform:none;letter-spacing:0;font-weight:500}
 .notes{background:var(--soft);border-radius:12px;padding:12px 14px;line-height:1.6;color:var(--tx)}
 .by{color:var(--mut);font-size:12.5px;margin:8px 2px 22px}
+.coords{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--soft);border-radius:12px;padding:8px 8px 8px 14px}
+.coords-t{font-variant-numeric:tabular-nums;user-select:all;overflow-wrap:anywhere}
 .spot{margin-bottom:4px}
 .spot-note{margin-bottom:10px;padding:10px 12px;border-radius:10px;background:var(--soft);color:var(--mut);font-size:13px;line-height:1.5}
 .spot-note.warn{background:#fef3e2;color:#92400e}
@@ -392,4 +394,5 @@ tbody tr:hover{background:var(--soft)}
 .admin-reply{display:flex;gap:8px}
 .admin-status{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .admin-status span{flex:1}
+.admin-status.off span{color:var(--faint)}
 .admin-status .input{width:170px}

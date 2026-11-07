@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { CONFIG } from "../lib/config";
 import { ago, fmtDate, fmtN, hue, initials } from "../lib/format";
-import { coverage, coverageShort } from "../lib/geo";
+import { centerOf, coverage, coverageShort } from "../lib/geo";
 import { CATS, STATUS } from "../lib/icons";
 import { useStore } from "../lib/store";
 import type { Area, AreaComment, CommentType } from "../lib/types";
@@ -209,6 +209,28 @@ function ProblemSpot({ area: a }: { area: Area }) {
   );
 }
 
+function Coords({ area: a }: { area: Area }) {
+  const showToast = useStore((s) => s.showToast);
+  const [lat, lon] = centerOf(a.shape);
+  const text = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+  const copy = () =>
+    navigator.clipboard.writeText(text).then(
+      () => showToast("Coordinates copied"),
+      () => showToast("Couldn't copy. Select the coordinates instead.", true),
+    );
+
+  return (
+    <div className="coords">
+      <span className="coords-t">{text}</span>
+      <button className="btn sm" onClick={copy}>
+        <Icon name="copy" size={14} />
+        Copy
+      </button>
+    </div>
+  );
+}
+
 export function DetailPanel({ area: a }: { area: Area }) {
   const closePanel = useStore((s) => s.closePanel);
   const toggleVote = useStore((s) => s.toggleVote);
@@ -304,6 +326,12 @@ export function DetailPanel({ area: a }: { area: Area }) {
           <>
             <h3 className="sec-t">Request notes</h3>
             <div className="notes">{a.notes}</div>
+          </>
+        )}
+        {a.status !== "released" && (
+          <>
+            <h3 className="sec-t">Coordinates</h3>
+            <Coords area={a} />
           </>
         )}
         <div className="by">

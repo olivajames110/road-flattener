@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addComment, amAdmin, setHidden, setStatus, signIn, signOut } from "../lib/comments";
+import { addComment, amAdmin, setHidden, setRegionHidden, setStatus, signIn, signOut } from "../lib/comments";
 import { loadAreas } from "../lib/data";
 import { ago } from "../lib/format";
 import { STATUS } from "../lib/icons";
@@ -132,12 +132,15 @@ export function Admin() {
         </div>
       ))}
 
-      <h2>Region status</h2>
+      <h2>Regions</h2>
       {areas
         .filter((a) => !a.local)
         .map((a) => (
-          <div key={a.id} className="admin-status">
-            <span>{a.name}</span>
+          <div key={a.id} className={"admin-status" + (a.hidden ? " off" : "")}>
+            <span>
+              {a.name}
+              {a.hidden && " (hidden)"}
+            </span>
             <select
               className="input"
               aria-label={"Status of " + a.name}
@@ -150,6 +153,9 @@ export function Admin() {
                 </option>
               ))}
             </select>
+            <button className="btn sm" onClick={() => run(setRegionHidden(a.id, !a.hidden))}>
+              {a.hidden ? "Show" : "Hide"}
+            </button>
           </div>
         ))}
     </div>

@@ -40,9 +40,11 @@ export async function fetchComments() {
 }
 
 export async function fetchStatuses() {
-  const { data, error } = await sb.from("area_status").select("area_id, status");
+  const { data, error } = await sb.from("area_status").select("area_id, status, hidden");
   if (error) throw error;
-  return new Map((data ?? []).map((r) => [r.area_id as string, r.status as Status]));
+  return new Map(
+    (data ?? []).map((r) => [r.area_id as string, { status: r.status as Status | null, hidden: r.hidden as boolean }]),
+  );
 }
 
 export async function addComment(
@@ -78,6 +80,11 @@ export async function setHidden(id: string, hidden: boolean) {
 
 export async function setStatus(areaId: string, status: Status) {
   const { error } = await sb.from("area_status").upsert({ area_id: areaId, status, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
+export async function setRegionHidden(areaId: string, hidden: boolean) {
+  const { error } = await sb.from("area_status").upsert({ area_id: areaId, hidden, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
 

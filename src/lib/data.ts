@@ -110,13 +110,16 @@ export async function loadAreas(withHidden = false): Promise<Area[]> {
   if (CONFIG.database) {
     const [comments, statuses] = await Promise.all([
       fetchComments().catch(() => new Map<string, AreaComment[]>()),
-      fetchStatuses().catch(() => new Map<string, Status>()),
+      fetchStatuses().catch(() => new Map<string, { status: Status | null; hidden: boolean }>()),
     ]);
-    published = published.map((a) => ({
-      ...a,
-      status: statuses.get(a.id) ?? a.status,
-      comments: (comments.get(a.id) ?? []).filter((c) => withHidden || !c.hidden),
-    }));
+    published = published
+      .map((a) => ({
+        ...a,
+        status: statuses.get(a.id)?.status ?? a.status,
+        hidden: statuses.get(a.id)?.hidden,
+        comments: (comments.get(a.id) ?? []).filter((c) => withHidden || !c.hidden),
+      }))
+      .filter((a) => withHidden || !a.hidden);
     saved.comments = {}; // Comments from before the database stayed in one browser
   }
   return [...published, ...saved.submitted].map((a) => {

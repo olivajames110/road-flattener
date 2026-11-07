@@ -49,6 +49,7 @@ export interface Area {
   packageName?: string;
   version?: string;
   local?: boolean; // Only stored in this browser until the database exists
+  hidden?: boolean; // Hidden from visitors from the admin page
 }
 
 export interface Draft {
