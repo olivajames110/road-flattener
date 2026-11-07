@@ -143,7 +143,7 @@ export function AreaList() {
           </select>
           <Icon d='<path d="m6 9 6 6 6-6"/>' size={16} weight={2.4} />
         </label>
-        <span className="n">{group === "country" ? groups.length : list.length}</span>
+        <span className="n">{list.length}</span>
       </div>
 
       {group === "az" && (

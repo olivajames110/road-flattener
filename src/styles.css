@@ -95,7 +95,7 @@ textarea{height:auto;padding:10px 12px;resize:vertical;min-height:76px;line-heig
 .empty{padding:28px 12px;text-align:center;color:var(--mut);font-size:13px;line-height:1.55}
 
 /* title dropdown */
-.list-head{display:flex;align-items:center;gap:8px;margin:0 2px 8px}
+.list-head{display:flex;align-items:center;gap:2px;margin:0 2px 8px}
 .title-sel{position:relative;display:inline-flex;align-items:center;border-radius:9px;margin-left:-2px;transition:background .15s}
 .title-sel:hover{background:var(--soft)}
 .title-sel:focus-within{box-shadow:0 0 0 2px var(--accent)}
